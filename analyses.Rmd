@@ -1,0 +1,138 @@
+---
+title: "For my classmates"
+author: "Carlos Gonzalez Poses"
+date: "2022-11-14"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+*This is a copy of practical 6 for Computational Inference with R*
+
+# Exercise 1
+
+```{r}
+library(tidyverse)
+d <- read_csv("vet.data(1).csv") # empty strings are NA. So this is very nice!
+d
+# Steps:
+# Type is not a variable, but just a variable that says which variable some values correspond to
+
+# 1.Weight and BMI should be different variables, whose values are currently in value2017 and value2018
+# 2. Gen and age should be separated into two varaibles
+# 3. year should be a variable with two values (2017, 2018). The values of value2017 and value2018 should be under bodyweight abd bmi
+```
+```{r}
+tidyd <- 
+  d %>% 
+  pivot_longer(c("value2017", "value2018"), names_to = "year", values_to = "measurement") %>% # create a variable year. The variable measurement is just temporary
+  pivot_wider(names_from = "type", values_from = "measurement") %>% # create two variable types, with values corresponding to 2017 and 2017
+  separate(gen_age, into = c("gender", "age"), sep = "_") %>% # Separate age and gender
+  mutate(year = str_remove(year, "value")) %>% 
+ mutate(id = paste(clinic, client, sep = "_")) %>% 
+  relocate(id)
+```
+
+# Exercise 2
+# I
+```{r}
+ggplot(tidyd) +
+  geom_bar(aes(x = breed)) # y is count as default
+
+ggplot(tidyd) +
+  geom_bar(aes(x = food_quality))
+
+ggplot(tidyd) +
+  geom_bar(aes(x = area))
+
+```
+
+```{r}
+ggplot(tidyd) +
+  geom_histogram(aes(x = weight), binwidth = 1) +
+  facet_wrap(~breed)
+
+# From the graph, I'd say Burmese probably have the lowest mean value
+# But to be sure, we should compute means
+
+# Better
+
+ggplot(tidyd) +
+  geom_boxplot(aes(y = weight, x = breed))
+
+tidyd %>% 
+  group_by(breed) %>% 
+  summarize(mean = mean(weight))
+
+# Actually it was not Burmese but Persian the one which lowest values
+
+# From the graph maximum value is clearly an American Shorthair. Also:
+
+tidyd %>% 
+  arrange(desc(weight))
+```
+## II
+```{r}
+tidyd %>% 
+  group_by(clinic, gender) %>% 
+  summarise(meanweight = mean(weight)) %>% 
+  arrange(meanweight)
+
+tidyd %>% 
+  arrange(weight)
+# Mean value for each clinic and gender
+```
+
+
+# III
+```{r}
+tidydd_codeok <-
+tidyd %>% 
+  mutate(weight = ifelse(weight < 2.5, NA, weight))
+
+# Clients affected
+tidydd_codeok %>% 
+  filter(is.na(weight)) %>% 
+  select(id) %>% 
+  unique()
+
+tidydd_codeok[which(is.na(tidydd_codeok$weight)),]
+
+
+```
+
+# IV
+
+```{r}
+tidydd_codeok %>% 
+  mutate(weight_kg = weight*0.453592) %>% 
+  select(-weight)
+```
+# V
+```{r}
+# Add a variable that computes total count of area and food quality
+tidyd <- tidyd %>% 
+  add_count(area,food_quality)
+
+ggplot(tidyd) +
+  geom_tile(aes(x = area, y = food_quality, fill = n))
+# No clear pattern;
+
+# Since there's different numbers of cats in each area, it is difficult to show a relationship.
+# Thus, I compute the proportion of cats in each area that have a given food quality
+tidyd <- tidyd %>% 
+  group_by(area) %>% 
+  mutate(areasize = n()) %>% 
+  mutate(prop = n/areasize)
+
+ggplot(tidyd) +
+  geom_tile(aes(x = area, y = food_quality, fill = prop))
+
+# Still not a very clear relationship. Proportions of cat with given food quality are rather similar across areas. The bigger patterns are that in rural areas even less cats are feeded food quality I.V, and that in suburban areas food quality II and I are more common.
+```
+
+
+
+

@@ -9,7 +9,8 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-*This is a copy of practical 6 for Computational Inference with R*
+*This is a copy of practical 6 for Computational Inference with R.*
+*I am using this file for testing github in Multivariate Data Analyses*
 
 # Exercise 1
 
